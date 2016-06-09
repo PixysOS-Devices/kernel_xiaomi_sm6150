@@ -858,6 +858,8 @@ struct tcp_skb_cb {
 			u32 first_tx_mstamp;
 			/* when we reached the "delivered" count */
 			u32 delivered_mstamp;
+			/* There is space for up to 20 bytes */
+			__u32 in_flight;/* Bytes in flight when packet sent */
 		} tx;   /* only used for outgoing skbs */
 		union {
 			struct inet_skb_parm	h4;

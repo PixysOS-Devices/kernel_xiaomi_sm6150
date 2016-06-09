@@ -1031,6 +1031,9 @@ static int __tcp_transmit_skb(struct sock *sk, struct sk_buff *skb,
 				skb = skb_clone(oskb, gfp_mask);
 		} tcp_skb_tsorted_restore(oskb);
 
+		TCP_SKB_CB(skb)->tx.in_flight = TCP_SKB_CB(skb)->end_seq
+			- tp->snd_una;
+
 		if (unlikely(!skb))
 			return -ENOBUFS;
 	}

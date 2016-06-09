@@ -3078,6 +3078,7 @@ static int tcp_clean_rtx_queue(struct sock *sk, u32 prior_fack,
 	long seq_rtt_us = -1L;
 	long ca_rtt_us = -1L;
 	u32 pkts_acked = 0;
+	u32 last_in_flight = 0;
 	bool rtt_update;
 	int flag = 0;
 
@@ -3233,7 +3234,8 @@ static int tcp_clean_rtx_queue(struct sock *sk, u32 prior_fack,
 
 	if (icsk->icsk_ca_ops->pkts_acked) {
 		struct ack_sample sample = { .pkts_acked = pkts_acked,
-					     .rtt_us = sack->rate->rtt_us };
+					     .rtt_us = ca_rtt_us,
+					     .in_flight = last_in_flight };
 
 		sample.in_flight = tp->mss_cache *
 			(tp->delivered - sack->rate->prior_delivered);
