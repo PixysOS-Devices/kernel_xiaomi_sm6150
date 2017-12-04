@@ -3117,6 +3117,7 @@ struct sched_avg_stats {
 	int nr_max;
 };
 extern void sched_get_nr_running_avg(struct sched_avg_stats *stats);
+
 #ifdef CONFIG_SMP
 #ifdef CONFIG_ENERGY_MODEL
 #define perf_domain_span(pd) (to_cpumask(((pd)->obj->cpus)))
@@ -3124,3 +3125,13 @@ extern void sched_get_nr_running_avg(struct sched_avg_stats *stats);
 #define perf_domain_span(pd) NULL
 #endif
 #endif
+
+static inline unsigned long cpu_util_dl(struct rq *rq)
+{
+	return (rq->dl.running_bw * SCHED_CAPACITY_SCALE) >> BW_SHIFT;
+}
+
+static inline unsigned long cpu_util_cfs(struct rq *rq)
+{
+	return rq->cfs.avg.util_avg;
+}
