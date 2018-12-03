@@ -252,7 +252,7 @@ static struct perf_domain *pd_init(int cpu)
 	pd = kzalloc(sizeof(*pd), GFP_KERNEL);
 	if (!pd)
 		return NULL;
-	pd->obj = obj;
+	pd->em_pd = obj;
 
 	return pd;
 }
@@ -263,13 +263,13 @@ static void perf_domain_debug(const struct cpumask *cpu_map,
 	if (!sched_debug() || !pd)
 		return;
 
-	printk(KERN_DEBUG "root_domain %*pbl: ", cpumask_pr_args(cpu_map));
+	printk(KERN_DEBUG "root_domain %*pbl:", cpumask_pr_args(cpu_map));
 
 	while (pd) {
 		printk(KERN_CONT " pd%d:{ cpus=%*pbl nr_cstate=%d }",
 				cpumask_first(perf_domain_span(pd)),
 				cpumask_pr_args(perf_domain_span(pd)),
-				em_pd_nr_cap_states(pd->obj));
+				em_pd_nr_cap_states(pd->em_pd));
 		pd = pd->next;
 	}
 
