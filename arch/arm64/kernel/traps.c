@@ -744,9 +744,8 @@ static int bug_handler(struct pt_regs *regs, unsigned int esr)
 }
 
 static struct break_hook bug_break_hook = {
-	.esr_val = 0xf2000000 | BUG_BRK_IMM,
-	.esr_mask = 0xffffffff,
 	.fn = bug_handler,
+	.imm = BUG_BRK_IMM,
 };
 
 /*
