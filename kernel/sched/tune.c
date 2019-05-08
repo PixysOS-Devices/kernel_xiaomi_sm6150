@@ -696,6 +696,37 @@ schedtune_boostgroup_init(struct schedtune *st)
 	return 0;
 }
 
+#ifdef CONFIG_STUNE_ASSIST
+static void write_default_values(struct cgroup_subsys_state *css)
+{
+	u8 i;
+	struct groups_data {
+		char *name;
+		int boost;
+		bool prefer_idle;
+		bool colocate;
+		bool no_override;
+	};
+	struct groups_data groups[3] = {
+		{ "top-app",	5, 1, 0, 1 },
+		{ "foreground", 1, 1, 0, 1 },
+		{ "background", 0, 0, 1, 0 }};
+
+	for (i = 0; i < ARRAY_SIZE(groups); i++) {
+		if (!strcmp(css->cgroup->kn->name, groups[i].name)) {
+			pr_info("%s: %i - %i - %i - %i\n", groups[i].name,
+					groups[i].boost, groups[i].prefer_idle,
+					groups[i].colocate,
+					groups[i].no_override);
+			boost_write(css, NULL, groups[i].boost);
+			prefer_idle_write(css, NULL, groups[i].prefer_idle);
+			sched_colocate_write(css, NULL, groups[i].colocate);
+			sched_boost_override_write(css, NULL, groups[i].no_override);
+		}
+	}
+}
+#endif
+
 static struct cgroup_subsys_state *
 schedtune_css_alloc(struct cgroup_subsys_state *parent_css)
 {
