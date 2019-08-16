@@ -60,7 +60,7 @@
 #include <linux/sched.h>
 #include <linux/wait.h>
 #include <linux/cgroup-defs.h>
-#include <linux/rbtree.h>
+
 #include <linux/filter.h>
 #include <linux/rculist_nulls.h>
 #include <linux/poll.h>
@@ -356,7 +356,6 @@ struct sock {
 	atomic_t		sk_drops;
 	int			sk_rcvlowat;
 	struct sk_buff_head	sk_error_queue;
-	struct sk_buff		*sk_rx_skb_cache;
 	struct sk_buff_head	sk_receive_queue;
 	/*
 	 * The backlog queue is special, it is always used with
@@ -399,11 +398,7 @@ struct sock {
 	int			sk_wmem_queued;
 	refcount_t		sk_wmem_alloc;
 	unsigned long		sk_tsq_flags;
-	union {
-		struct sk_buff	*sk_send_head;
-		struct rb_root	tcp_rtx_queue;
-	};
-	struct sk_buff		*sk_tx_skb_cache;
+	struct sk_buff		*sk_send_head;
 	struct sk_buff_head	sk_write_queue;
 	__s32			sk_peek_off;
 	int			sk_write_pending;
@@ -413,12 +408,11 @@ struct sock {
 	struct timer_list	sk_timer;
 	__u32			sk_priority;
 	__u32			sk_mark;
-	unsigned long		sk_pacing_rate; /* bytes per second */
-	unsigned long		sk_max_pacing_rate;
+	u32			sk_pacing_rate; /* bytes per second */
+	u32			sk_max_pacing_rate;
 	struct page_frag	sk_frag;
 	netdev_features_t	sk_route_caps;
 	netdev_features_t	sk_route_nocaps;
-	netdev_features_t	sk_route_forced_caps;
 	int			sk_gso_type;
 	unsigned int		sk_gso_max_size;
 	gfp_t			sk_allocation;
@@ -1420,11 +1414,6 @@ static inline void sk_wmem_free_skb(struct sock *sk, struct sk_buff *skb)
 	sock_set_flag(sk, SOCK_QUEUE_SHRUNK);
 	sk->sk_wmem_queued -= skb->truesize;
 	sk_mem_uncharge(sk, skb->truesize);
-	if (!sk->sk_tx_skb_cache && !skb_cloned(skb)) {
-		skb_zcopy_clear(skb, true);
-		sk->sk_tx_skb_cache = skb;
-		return;
-	}
 	__kfree_skb(skb);
 }
 
@@ -1867,6 +1856,15 @@ static inline void sk_nocaps_add(struct sock *sk, netdev_features_t flags)
 {
 	sk->sk_route_nocaps |= flags;
 	sk->sk_route_caps &= ~flags;
+}
+
+static inline bool sk_check_csum_caps(struct sock *sk)
+{
+	return (sk->sk_route_caps & NETIF_F_HW_CSUM) ||
+	       (sk->sk_family == PF_INET &&
+		(sk->sk_route_caps & NETIF_F_IP_CSUM)) ||
+	       (sk->sk_family == PF_INET6 &&
+		(sk->sk_route_caps & NETIF_F_IPV6_CSUM));
 }
 
 static inline int skb_do_copy_data_nocache(struct sock *sk, struct sk_buff *skb,
@@ -2322,15 +2320,6 @@ static inline void sock_tx_timestamp(const struct sock *sk, __u16 tsflags,
 static inline void sk_eat_skb(struct sock *sk, struct sk_buff *skb)
 {
 	__skb_unlink(skb, &sk->sk_receive_queue);
-	if (
-#ifdef CONFIG_RPS
-	    !static_key_false(&rps_needed) &&
-#endif
-	    !sk->sk_rx_skb_cache) {
-		sk->sk_rx_skb_cache = skb;
-		skb_orphan(skb);
-		return;
-	}
 	__kfree_skb(skb);
 }
 
