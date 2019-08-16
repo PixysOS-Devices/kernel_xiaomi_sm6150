@@ -904,10 +904,7 @@ set_rcvbuf:
 	case SO_RCVLOWAT:
 		if (val < 0)
 			val = INT_MAX;
-		if (sock->ops->set_rcvlowat)
-			ret = sock->ops->set_rcvlowat(sk, val);
-		else
-			sk->sk_rcvlowat = val ? : 1;
+		sk->sk_rcvlowat = val ? : 1;
 		break;
 
 	case SO_RCVTIMEO:
@@ -1036,7 +1033,7 @@ set_rcvbuf:
 			cmpxchg(&sk->sk_pacing_status,
 				SK_PACING_NONE,
 				SK_PACING_NEEDED);
-		sk->sk_max_pacing_rate = (val == ~0U) ? ~0UL : val;
+		sk->sk_max_pacing_rate = val;
 		sk->sk_pacing_rate = min(sk->sk_pacing_rate,
 					 sk->sk_max_pacing_rate);
 		break;
@@ -1350,8 +1347,7 @@ int sock_getsockopt(struct socket *sock, int level, int optname,
 #endif
 
 	case SO_MAX_PACING_RATE:
-		/* 32bit version */
-		v.val = min_t(unsigned long, sk->sk_max_pacing_rate, ~0U);
+		v.val = sk->sk_max_pacing_rate;
 		break;
 
 	case SO_INCOMING_CPU:
@@ -1770,7 +1766,7 @@ void sk_setup_caps(struct sock *sk, struct dst_entry *dst)
 	u32 max_segs = 1;
 
 	sk_dst_set(sk, dst);
-	sk->sk_route_caps = dst->dev->features | sk->sk_route_forced_caps;
+	sk->sk_route_caps = dst->dev->features;
 	if (sk->sk_route_caps & NETIF_F_GSO)
 		sk->sk_route_caps |= NETIF_F_GSO_SOFTWARE;
 	sk->sk_route_caps &= ~sk->sk_route_nocaps;
@@ -2747,8 +2743,8 @@ void sock_init_data(struct socket *sock, struct sock *sk)
 	sk->sk_ll_usec		=	sysctl_net_busy_read;
 #endif
 
-	sk->sk_max_pacing_rate = ~0UL;
-	sk->sk_pacing_rate = ~0UL;
+	sk->sk_max_pacing_rate = ~0U;
+	sk->sk_pacing_rate = ~0U;
 	sk->sk_pacing_shift = 10;
 	sk->sk_incoming_cpu = -1;
 	/*
