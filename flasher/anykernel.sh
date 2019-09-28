@@ -47,6 +47,14 @@ else
   patch_cmdline "skip_override" "";
 fi;
 
+# Set Android version for kernel
+ver="$(file_getprop /system/build.prop ro.build.version.release)"
+if [ ! -z "$ver" ]; then
+  patch_cmdline "androidboot.version" "androidboot.version=$ver"
+else
+  patch_cmdline "androidboot.version" ""
+fi
+
 if mountpoint -q /data; then
   # Optimize F2FS extension list (@arter97)
   for list_path in $(find /sys/fs/f2fs* -name extension_list); do
