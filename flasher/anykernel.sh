@@ -21,7 +21,8 @@ supported.patchlevels=
 # shell variables
 block=/dev/block/bootdevice/by-name/boot;
 is_slot_device=0;
-ramdisk_compression=none;
+# this property will be set later, when we check for the presence of ramdisk.cpio
+# ramdisk_compression=none;
 
 
 ## AnyKernel methods (DO NOT CHANGE)
@@ -29,16 +30,22 @@ ramdisk_compression=none;
 . tools/ak3-core.sh;
 
 ## AnyKernel install
-split_boot;
+if [ "$magisk_present" = true ]; then
+  # AnyKernel file attributes
+  # set permissions/ownership for included ramdisk files
+  dump_boot;
 
-# Add skip_override parameter to cmdline so user doesn't have to reflash Magisk
-if [ -d $ramdisk/.backup ]; then
-  ui_print " "; 
-  ui_print "Magisk detected! Patching cmdline so reflashing Magisk is not necessary...";
-  patch_cmdline "skip_override" "skip_override";
+  # Add skip_override parameter to cmdline so user doesn't have to reflash Magisk
+  if [ -d $ramdisk/.backup ]; then
+    ui_print " ";
+    ui_print "Magisk detected! Patching cmdline so reflashing Magisk is not necessary...";
+    patch_cmdline "skip_override" "skip_override";
+  else
+    patch_cmdline "skip_override" "";
+  fi;
 else
-  patch_cmdline "skip_override" "";
-fi;
+  split_boot;
+fi
 
 # Set Android version for kernel
 ver="$(file_getprop /system/build.prop ro.build.version.release)"
@@ -86,6 +93,10 @@ fi
 
 # end ramdisk changes
 
-flash_boot;
-flash_dtbo;
+if [ "$magisk_present" = true ]; then
+  write_boot;
+else
+  flash_boot;
+  flash_dtbo;
+fi
 ## end install
