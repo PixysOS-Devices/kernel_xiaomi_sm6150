@@ -29,6 +29,8 @@ is_slot_device=0;
 # import patching functions/variables - see for reference
 . tools/ak3-core.sh;
 
+magisk_check()
+
 ## AnyKernel install
 if [ "$magisk_present" = true ]; then
   # AnyKernel file attributes
