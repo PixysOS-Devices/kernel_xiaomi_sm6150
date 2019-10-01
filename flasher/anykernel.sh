@@ -39,7 +39,6 @@ if [ "$magisk_present" = true ]; then
 
   # Add skip_override parameter to cmdline so user doesn't have to reflash Magisk
   if [ -d $ramdisk/.backup ]; then
-    ui_print " ";
     ui_print "  •  Using Root [Magisk] Mode";
     patch_cmdline "skip_override" "skip_override";
   else
