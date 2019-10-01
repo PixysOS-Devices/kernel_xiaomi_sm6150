@@ -19,11 +19,15 @@ ui_print() {
     shift;
   done;
 }
+
+ui_print "----- Crimson Kernel by @uditkarode -----" " "
+
 ui_printfile() {
   while IFS='' read -r line || $bb [[ -n "$line" ]]; do
     ui_print "$line";
   done < $1;
 }
+
 show_progress() { echo "progress $1 $2" > $OUTFD; }
 file_getprop() { $bb grep "^$2=" "$1" | $bb cut -d= -f2-; }
 int2ver() {
@@ -127,7 +131,6 @@ if [ -f version ]; then
   ui_printfile version;
   ui_print " ";
 fi;
-ui_print " " "AnyKernel3 by osm0sis @ xda-developers" " " " ";
 
 $BOOTMODE || $bb mount -o bind /dev/urandom /dev/random;
 umount_all;
@@ -176,12 +179,11 @@ elif [ ! "$(getprop ro.product.device 2>/dev/null)" -a ! "$(getprop ro.build.pro
 fi;
 
 if [ "$(file_getprop anykernel.sh do.devicecheck)" == 1 ]; then
-  ui_print "Checking device...";
+  ui_print "  •  Checking device...";
   device=$(getprop ro.product.device);
   product=$(getprop ro.build.product);
   for testname in $(file_getprop anykernel.sh 'device.name.*'); do
     if [ "$device" == "$testname" -o "$product" == "$testname" ]; then
-      ui_print "$testname" " ";
       match=1;
       break;
     fi;
@@ -239,7 +241,7 @@ if [ "$supported_lvl" ]; then
   fi;
 fi;
 
-ui_print "Installing...";
+ui_print "  •  Installing...";
 core=$($bb grep -oE 'ak.*core.sh' anykernel.sh);
 test -f tools/$core || $bb ln -s $home/tools/ak*-core.sh $home/tools/$core;
 PATH="$home/bin:$PATH" home=$home $bb ash anykernel.sh $2;
@@ -286,4 +288,4 @@ if [ "$(file_getprop anykernel.sh do.cleanup)" == 1 ]; then
   cleanup;
 fi;
 
-ui_print " " " " "Done!";
+ui_print " " "Kernel flash successful!"
