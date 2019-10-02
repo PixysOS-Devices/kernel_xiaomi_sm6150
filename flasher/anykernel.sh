@@ -61,7 +61,7 @@ if mountpoint -q /data; then
   # Optimize F2FS extension list (@arter97)
   for list_path in $(find /sys/fs/f2fs* -name extension_list); do
 
-    ui_print "  • Optimizing F2FS extension list"
+    ui_print "  •  Optimizing F2FS extension list"
     echo "Updating extension list: $list_path"
 
     echo "Clearing extension list"
@@ -91,12 +91,9 @@ if mountpoint -q /data; then
   done
 fi
 
-# end ramdisk changes
-
 if [ "$magisk_present" = true ]; then
   write_boot;
 else
   flash_boot;
   flash_dtbo;
 fi
-## end install
