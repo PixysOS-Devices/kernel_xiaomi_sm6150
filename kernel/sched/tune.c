@@ -654,18 +654,6 @@ static int prefer_idle_write_wrapper(struct cgroup_subsys_state *css,
 #endif
 
 static struct cftype files[] = {
-#ifdef CONFIG_SCHED_WALT
-	{
-		.name = "sched_boost_no_override",
-		.read_u64 = sched_boost_override_read,
-		.write_u64 = sched_boost_override_write_wrapper,
-	},
-	{
-		.name = "colocate",
-		.read_u64 = sched_colocate_read,
-		.write_u64 = sched_colocate_write_wrapper,
-	},
-#endif
 	{
 		.name = "boost",
 		.read_s64 = boost_read,
