@@ -44,14 +44,6 @@ if [ "$magisk_present" = true ]; then
   else
     patch_cmdline "skip_override" "";
   fi;
-  
-  # Set Android version for kernel
-  ver="$(file_getprop /system/build.prop ro.build.version.release)"
-  if [ ! -z "$ver" ]; then
-    patch_cmdline "androidboot.version" "androidboot.version=$ver"
-  else
-    patch_cmdline "androidboot.version" ""
-  fi
 else
   ui_print "  •  Using Rootless Mode"
   split_boot;
