@@ -18,7 +18,7 @@
 #include <linux/module.h>
 #include <linux/cpufreq.h>
 #include <linux/notifier.h>
-#include <linux/fb.h>
+#include <linux/msm_drm_notify.h>
 #include <mach/cpufreq.h>
 
 #define MSM_SLEEPER_MAJOR_VERSION	3
@@ -55,24 +55,27 @@ static void msm_sleeper_resume(void)
 
 }
 
-static int fb_notifier_callback(struct notifier_block *self,
+static int msm_drm_notifier_callback(struct notifier_block *self,
 				unsigned long event, void *data)
 {
-	struct fb_event *evdata = data;
+	struct msm_drm_notifier *evdata = data;
 	int *blank;
 
-	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+	if (event != MSM_DRM_EVENT_BLANK)
+		return 0;
+
+	if (evdata->id != MSM_DRM_PRIMARY_DISPLAY)
+		return 0;
+
+	if (evdata && evdata->data) {
 		blank = evdata->data;
 		switch (*blank) {
-			case FB_BLANK_UNBLANK:
+			case MSM_DRM_BLANK_UNBLANK:
 				//display on
 				if (limit_set)
 					msm_sleeper_resume();
 				break;
-			case FB_BLANK_POWERDOWN:
-			case FB_BLANK_HSYNC_SUSPEND:
-			case FB_BLANK_VSYNC_SUSPEND:
-			case FB_BLANK_NORMAL:
+			case MSM_DRM_BLANK_POWERDOWN:
 				//display off
 				if (maxscroff)
 					msm_sleeper_suspend();
@@ -83,9 +86,9 @@ static int fb_notifier_callback(struct notifier_block *self,
 	return 0;
 }
 
-static struct notifier_block msm_sleeper_fb_notif =
+static struct notifier_block msm_sleeper_msm_drm_notif =
 {
-	.notifier_call = fb_notifier_callback,
+	.notifier_call = msm_drm_notifier_callback,
 };
 
 
@@ -95,7 +98,7 @@ static int __init msm_sleeper_init(void)
 		 MSM_SLEEPER_MAJOR_VERSION,
 		 MSM_SLEEPER_MINOR_VERSION);
 
-	fb_register_client(&msm_sleeper_fb_notif);
+	msm_drm_register_client(&msm_sleeper_msm_drm_notif);
 
 	return 0;
 }
