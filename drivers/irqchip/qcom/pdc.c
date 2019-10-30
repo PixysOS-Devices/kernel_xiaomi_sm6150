@@ -304,17 +304,6 @@ int qcom_pdc_init(struct device_node *node,
 		goto failure;
 	}
 
-	for (i = 0; pdc_data[i].pin >= 0; i++)
-		pin_count++;
-
-	max_enable_regs = pin_count / IRQS_PER_REG;
-	if (pin_count % IRQS_PER_REG)
-		max_enable_regs++;
-
-	if (pdc_domain->flags & IRQ_DOMAIN_NAME_ALLOCATED) {
-		pdc_domain->flags &= ~IRQ_DOMAIN_NAME_ALLOCATED;
-		kfree(pdc_domain->name);
-	}
 	pdc_domain->name = "qcom,pdc";
 
 	return 0;
