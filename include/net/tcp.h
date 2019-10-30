@@ -438,6 +438,7 @@ void tcp_metrics_init(void);
 bool tcp_peer_is_proven(struct request_sock *req, struct dst_entry *dst);
 void tcp_close(struct sock *sk, long timeout);
 void tcp_init_sock(struct sock *sk);
+void tcp_init_transfer(struct sock *sk, int bpf_op);
 unsigned int tcp_poll(struct file *file, struct socket *sock,
 		      struct poll_table_struct *wait);
 int tcp_getsockopt(struct sock *sk, int level, int optname,
@@ -1709,27 +1710,6 @@ static inline void tcp_check_send_head(struct sock *sk, struct sk_buff *skb_unli
 {
 	if (tcp_write_queue_empty(sk))
 		tcp_chrono_stop(sk, TCP_CHRONO_BUSY);
-}
-
-static inline struct sk_buff *tcp_rtx_queue_head(const struct sock *sk)
-{
-	struct sk_buff *skb = tcp_write_queue_head(sk);
-
-	if (skb == tcp_send_head(sk))
-		skb = NULL;
-
-	return skb;
-}
-
-static inline struct sk_buff *tcp_rtx_queue_tail(const struct sock *sk)
-{
-	struct sk_buff *skb = tcp_send_head(sk);
-
-	/* empty retransmit queue, for example due to zero window */
-	if (skb == tcp_write_queue_head(sk))
-		return NULL;
-
-	return skb ? tcp_write_queue_prev(sk, skb) : tcp_write_queue_tail(sk);
 }
 
 static inline void __tcp_add_write_queue_tail(struct sock *sk, struct sk_buff *skb)

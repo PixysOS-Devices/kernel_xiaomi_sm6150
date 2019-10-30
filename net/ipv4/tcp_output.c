@@ -182,13 +182,16 @@ static void tcp_event_data_sent(struct tcp_sock *tp,
 	if (tcp_packets_in_flight(tp) == 0)
 		tcp_ca_event(sk, CA_EVENT_TX_START);
 
-	tp->lsndtime = now;
-
-	/* If it is a reply for ato after last received
-	 * packet, enter pingpong mode.
+	/* If this is the first data packet sent in response to the
+	 * previous received data,
+	 * and it is a reply for ato after last received packet,
+	 * increase pingpong count.
 	 */
-	if ((u32)(now - icsk->icsk_ack.lrcvtime) < icsk->icsk_ack.ato)
-		icsk->icsk_ack.pingpong = 1;
+	if (before(tp->lsndtime, icsk->icsk_ack.lrcvtime) &&
+	    (u32)(now - icsk->icsk_ack.lrcvtime) < icsk->icsk_ack.ato)
+		inet_csk_inc_pingpong_cnt(sk);
+
+	tp->lsndtime = now;
 }
 
 /* Account for an ACK we sent. */
@@ -1273,7 +1276,6 @@ int tcp_fragment(struct sock *sk, enum tcp_queue tcp_queue,
 	struct tcp_sock *tp = tcp_sk(sk);
 	struct sk_buff *buff;
 	int nsize, old_factor;
-	long limit;
 	int nlen;
 	u8 flags;
 
@@ -1284,15 +1286,7 @@ int tcp_fragment(struct sock *sk, enum tcp_queue tcp_queue,
 	if (nsize < 0)
 		nsize = 0;
 
-	/* tcp_sendmsg() can overshoot sk_wmem_queued by one full size skb.
-	 * We need some allowance to not penalize applications setting small
-	 * SO_SNDBUF values.
-	 * Also allow first and last skb in retransmit queue to be split.
-	 */
-	limit = sk->sk_sndbuf + 2 * SKB_TRUESIZE(GSO_MAX_SIZE);
-	if (unlikely((sk->sk_wmem_queued >> 1) > limit &&
-		     skb != tcp_rtx_queue_head(sk) &&
-		     skb != tcp_rtx_queue_tail(sk))) {
+	if (unlikely((sk->sk_wmem_queued >> 1) > sk->sk_sndbuf + 0x20000)) {
 		NET_INC_STATS(sock_net(sk), LINUX_MIB_TCPWQUEUETOOBIG);
 		return -ENOMEM;
 	}
@@ -2963,12 +2957,11 @@ int tcp_retransmit_skb(struct sock *sk, struct sk_buff *skb, int segs)
 #endif
 		TCP_SKB_CB(skb)->sacked |= TCPCB_RETRANS;
 		tp->retrans_out += tcp_skb_pcount(skb);
-
-		/* Save stamp of the first retransmit. */
-		if (!tp->retrans_stamp)
-			tp->retrans_stamp = tcp_skb_timestamp(skb);
-
 	}
+
+	/* Save stamp of the first (attempted) retransmit. */
+	if (!tp->retrans_stamp)
+		tp->retrans_stamp = tcp_skb_timestamp(skb);
 
 	if (tp->undo_retrans < 0)
 		tp->undo_retrans = 0;
@@ -3246,7 +3239,11 @@ struct sk_buff *tcp_make_synack(const struct sock *sk, struct dst_entry *dst,
 		skb->skb_mstamp_ns = cookie_init_timestamp(req);
 	else
 #endif
+	{
 		skb->skb_mstamp_ns = tcp_clock_ns();
+		if (!tcp_rsk(req)->snt_synack) /* Timestamp first SYNACK */
+			tcp_rsk(req)->snt_synack = tcp_skb_timestamp_us(skb);
+	}
 
 #ifdef CONFIG_TCP_MD5SIG
 	rcu_read_lock();
@@ -3563,7 +3560,7 @@ void tcp_send_delayed_ack(struct sock *sk)
 		const struct tcp_sock *tp = tcp_sk(sk);
 		int max_ato = HZ / 2;
 
-		if (icsk->icsk_ack.pingpong ||
+		if (inet_csk_in_pingpong_mode(sk) ||
 		    (icsk->icsk_ack.pending & ICSK_ACK_PUSHED))
 			max_ato = TCP_DELACK_MAX;
 
@@ -3744,7 +3741,7 @@ void tcp_send_probe0(struct sock *sk)
 	struct inet_connection_sock *icsk = inet_csk(sk);
 	struct tcp_sock *tp = tcp_sk(sk);
 	struct net *net = sock_net(sk);
-	unsigned long probe_max;
+	unsigned long timeout;
 	int err;
 
 	err = tcp_write_wakeup(sk, LINUX_MIB_TCPWINPROBE);
@@ -3756,24 +3753,19 @@ void tcp_send_probe0(struct sock *sk)
 		return;
 	}
 
+	icsk->icsk_probes_out++;
 	if (err <= 0) {
 		if (icsk->icsk_backoff < net->ipv4.sysctl_tcp_retries2)
 			icsk->icsk_backoff++;
-		icsk->icsk_probes_out++;
-		probe_max = TCP_RTO_MAX;
+		timeout = tcp_probe0_when(sk, TCP_RTO_MAX);
 	} else {
 		/* If packet was not sent due to local congestion,
-		 * do not backoff and do not remember icsk_probes_out.
-		 * Let local senders to fight for local resources.
-		 *
-		 * Use accumulated backoff yet.
+		 * Let senders fight for local resources conservatively.
 		 */
-		if (!icsk->icsk_probes_out)
-			icsk->icsk_probes_out = 1;
-		probe_max = TCP_RESOURCE_PROBE_INTERVAL;
+		timeout = TCP_RESOURCE_PROBE_INTERVAL;
 	}
 	inet_csk_reset_xmit_timer(sk, ICSK_TIME_PROBE0,
-				  tcp_probe0_when(sk, probe_max),
+				  timeout,
 				  TCP_RTO_MAX);
 }
 

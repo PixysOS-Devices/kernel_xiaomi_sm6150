@@ -415,22 +415,6 @@ static u32 bbr_inflight(struct sock *sk, u32 bw, int gain)
 	return inflight;
 }
 
-/* Find the cwnd increment based on estimate of ack aggregation */
-static u32 bbr_ack_aggregation_cwnd(struct sock *sk)
-{
-	u32 max_aggr_cwnd, aggr_cwnd = 0;
-
-	if (bbr_extra_acked_gain && bbr_full_bw_reached(sk)) {
-		max_aggr_cwnd = ((u64)bbr_bw(sk) * bbr_extra_acked_max_us)
-				/ BW_UNIT;
-		aggr_cwnd = (bbr_extra_acked_gain * bbr_extra_acked(sk))
-			     >> BBR_SCALE;
-		aggr_cwnd = min(aggr_cwnd, max_aggr_cwnd);
-	}
-
-	return aggr_cwnd;
-}
-
 /* With pacing at lower layers, there's often less data "in the network" than
  * "in flight". With TSQ and departure time pacing at lower layers (e.g. fq),
  * we often have several skbs queued in the pacing layer with a pre-scheduled
@@ -462,6 +446,22 @@ static u32 bbr_packets_in_net_at_edt(struct sock *sk, u32 inflight_now)
 	if (interval_delivered >= inflight_at_edt)
 		return 0;
 	return inflight_at_edt - interval_delivered;
+}
+
+/* Find the cwnd increment based on estimate of ack aggregation */
+static u32 bbr_ack_aggregation_cwnd(struct sock *sk)
+{
+	u32 max_aggr_cwnd, aggr_cwnd = 0;
+
+	if (bbr_extra_acked_gain && bbr_full_bw_reached(sk)) {
+		max_aggr_cwnd = ((u64)bbr_bw(sk) * bbr_extra_acked_max_us)
+				/ BW_UNIT;
+		aggr_cwnd = (bbr_extra_acked_gain * bbr_extra_acked(sk))
+			     >> BBR_SCALE;
+		aggr_cwnd = min(aggr_cwnd, max_aggr_cwnd);
+	}
+
+	return aggr_cwnd;
 }
 
 /* An optimization in BBR to reduce losses: On the first round of recovery, we
@@ -893,11 +893,11 @@ static void bbr_check_drain(struct sock *sk, const struct rate_sample *rs)
 	if (bbr->mode == BBR_STARTUP && bbr_full_bw_reached(sk)) {
 		bbr->mode = BBR_DRAIN;	/* drain queue we created */
 		tcp_sk(sk)->snd_ssthresh =
-				bbr_target_cwnd(sk, bbr_max_bw(sk), BBR_UNIT);
+				bbr_inflight(sk, bbr_max_bw(sk), BBR_UNIT);
 	}	/* fall through to check if in-flight is already small: */
 	if (bbr->mode == BBR_DRAIN &&
 	    bbr_packets_in_net_at_edt(sk, tcp_packets_in_flight(tcp_sk(sk))) <=
-	    bbr_target_cwnd(sk, bbr_max_bw(sk), BBR_UNIT))
+	    bbr_inflight(sk, bbr_max_bw(sk), BBR_UNIT))
 		bbr_reset_probe_bw_mode(sk);  /* we estimate queue is drained */
 }
 
