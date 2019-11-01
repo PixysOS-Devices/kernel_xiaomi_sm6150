@@ -28,8 +28,6 @@ DTB_LIST := $(dtb-y)
 endif
 DTB_OBJS := $(shell find $(obj)/dts/ -name \*.dtb)
 
-DTBO_OBJS := $(shell find -L $(obj)/dts/ -name \*.dtbo)
-
 # Add RTIC DTB to the DTB list if RTIC MPGen is enabled
 # Note, we keep this for compatibility with
 # BUILD_ARM64_APPENDED_DTB_IMAGE targets.
@@ -69,9 +67,6 @@ $(obj)/Image.lzo: $(obj)/Image FORCE
 
 $(obj)/Image.gz-dtb: $(obj)/Image.gz $(DTB_OBJS) FORCE
 	$(call if_changed,cat)
-
-$(obj)/dtbo.img: $(obj)/dts/dtboimg.cfg $(DTBO_OBJS) FORCE
-	$(call if_changed,mkdtimg,4096) # align dtbo.img to 4kB
 
 install:
 	$(CONFIG_SHELL) $(srctree)/$(src)/install.sh $(KERNELRELEASE) \
