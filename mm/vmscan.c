@@ -3549,15 +3549,9 @@ static void kswapd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclaim_o
 
 	prepare_to_wait(&pgdat->kswapd_wait, &wait, TASK_INTERRUPTIBLE);
 
-	/*
-	 * Try to sleep for a short interval. Note that kcompactd will only be
-	 * woken if it is possible to sleep for a short interval. This is
-	 * deliberate on the assumption that if reclaim cannot keep an
-	 * eligible zone balanced that it's also unlikely that compaction will
-	 * succeed.
-	 */
-	if (prepare_kswapd_sleep(pgdat, reclaim_order, classzone_idx)) {
-		simple_lmk_stop_reclaim();
+	/* Try to sleep for a short interval */
+	if (prepare_kswapd_sleep(pgdat, order, remaining,
+						balanced_classzone_idx)) {
 		/*
 		 * Compaction records what page blocks it recently failed to
 		 * isolate pages from and skips them in the future scanning.
@@ -3592,9 +3586,8 @@ static void kswapd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclaim_o
 	 * After a short sleep, check if it was a premature sleep. If not, then
 	 * go fully to sleep until explicitly woken up.
 	 */
-	if (!remaining &&
-	    prepare_kswapd_sleep(pgdat, reclaim_order, classzone_idx)) {
-		simple_lmk_stop_reclaim();
+	if (prepare_kswapd_sleep(pgdat, order, remaining,
+						balanced_classzone_idx)) {
 		trace_mm_vmscan_kswapd_sleep(pgdat->node_id);
 
 		/*
