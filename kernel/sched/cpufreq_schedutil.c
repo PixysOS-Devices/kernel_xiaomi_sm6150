@@ -541,7 +541,7 @@ static ssize_t up_rate_limit_us_store(struct gov_attr_set *attr_set,
 	if (kstrtouint(buf, 10, &rate_limit_us))
 		return -EINVAL;
 
-	if (!strcmp(current->comm, "init"))
+	if (task_is_booster(current))
 		return count;
 
 	tunables->up_rate_limit_us = rate_limit_us;
@@ -564,7 +564,7 @@ static ssize_t down_rate_limit_us_store(struct gov_attr_set *attr_set,
 	if (kstrtouint(buf, 10, &rate_limit_us))
 		return -EINVAL;
 
-	if (!strcmp(current->comm, "init"))
+	if (task_is_booster(current))
 		return count;
 
 	tunables->down_rate_limit_us = rate_limit_us;
