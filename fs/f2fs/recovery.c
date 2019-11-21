@@ -265,6 +265,7 @@ static int recover_inode(struct inode *inode, struct page *page)
 					return err;
 				F2FS_I(inode)->i_projid = kprojid;
 			}
+				make_kprojid(&init_user_ns, i_projid);
 		}
 	}
 
