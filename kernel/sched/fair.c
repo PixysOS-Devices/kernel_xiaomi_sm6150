@@ -8325,7 +8325,7 @@ static int find_energy_efficient_cpu(struct sched_domain *sd,
 
 		/* Find a cpu with sufficient capacity */
 		target_cpu = find_best_target(p, &eenv->cpu[EAS_CPU_BKP].cpu_id,
-					      boosted, sync_boost, prefer_idle,
+					      boosted, false, prefer_idle,
 					      &fbt_env);
 		if (target_cpu < 0)
 			goto out;
@@ -9625,14 +9625,6 @@ static void update_blocked_averages(int cpu)
 	 * update_cfs_rq_load_avg() can call cpufreq_update_util(). Make sure
 	 * that RT, DL and IRQ signals have been updated before updating CFS.
 	 */
-	curr_class = rq->curr->sched_class;
-	update_rt_rq_load_avg(rq_clock_pelt(rq), rq, curr_class == &rt_sched_class);
-	update_dl_rq_load_avg(rq_clock_pelt(rq), rq, curr_class == &dl_sched_class);
-	update_irq_load_avg(rq, 0);
-
-	/* Don't need periodic decay once load/util_avg are null */
-	if (others_have_blocked(rq))
-		done = false;
 
 	/*
 	 * Iterates the task_group tree in a bottom up fashion, see
