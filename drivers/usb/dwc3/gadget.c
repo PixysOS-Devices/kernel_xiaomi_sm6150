@@ -1933,7 +1933,7 @@ static int dwc3_gadget_wakeup_int(struct dwc3 *dwc)
 	case DWC3_LINK_STATE_U3:	/* in HS, means SUSPEND */
 		break;
 	case DWC3_LINK_STATE_U1:
-		if (dwc->gadget.speed < USB_SPEED_SUPER) {
+		if (dwc->gadget.speed != USB_SPEED_SUPER) {
 			link_recover_only = true;
 			break;
 		}
@@ -2042,7 +2042,7 @@ static int dwc_gadget_func_wakeup(struct usb_gadget *g, int interface_id)
 	int ret = 0;
 	struct dwc3 *dwc = gadget_to_dwc(g);
 
-	if (!g || (g->speed < USB_SPEED_SUPER))
+	if (!g || (g->speed != USB_SPEED_SUPER))
 		return -ENOTSUPP;
 
 	if (dwc3_gadget_is_suspended(dwc)) {
@@ -2523,8 +2523,7 @@ static void __maybe_unused dwc3_gadget_set_speed(struct usb_gadget *g,
 	 * STAR#9000525659: Clock Domain Crossing on DCTL in
 	 * USB 2.0 Mode
 	 */
-	if (dwc->revision < DWC3_REVISION_220A &&
-	    !dwc->dis_metastability_quirk) {
+	if (dwc->revision < DWC3_REVISION_220A) {
 		reg |= DWC3_DCFG_SUPERSPEED;
 	} else {
 		switch (speed) {
@@ -3983,8 +3982,7 @@ int dwc3_gadget_init(struct dwc3 *dwc)
 	 * is less than super speed because we don't have means, yet, to tell
 	 * composite.c that we are USB 2.0 + LPM ECN.
 	 */
-	if (dwc->revision < DWC3_REVISION_220A &&
-	    !dwc->dis_metastability_quirk)
+	if (dwc->revision < DWC3_REVISION_220A)
 		dev_info(dwc->dev, "changing max_speed on rev %08x\n",
 				dwc->revision);
 
