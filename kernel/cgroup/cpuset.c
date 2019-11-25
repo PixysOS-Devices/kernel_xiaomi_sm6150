@@ -138,12 +138,10 @@ struct cpuset {
 	int relax_domain_level;
 };
 
-#ifdef CONFIG_CPUSETS_ASSIST
 struct cs_target {
 	const char *name;
 	char *cpus;
 };
-#endif
 
 static inline struct cpuset *css_cs(struct cgroup_subsys_state *css)
 {
