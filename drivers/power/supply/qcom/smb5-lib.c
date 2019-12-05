@@ -3184,8 +3184,8 @@ int smblib_get_prop_usb_voltage_max_design(struct smb_charger *chg,
 		/* else, fallthrough */
 	case POWER_SUPPLY_TYPE_USB_HVDCP_3:
 	case POWER_SUPPLY_TYPE_USB_PD:
-		if (chg->smb_version == PMI632_SUBTYPE
-			|| chg->smb_version == PM6150_SUBTYPE)
+		if (chg->chg_param.smb_version == PMI632_SUBTYPE
+			|| chg->chg_param.smb_version == PM6150_SUBTYPE)
 			val->intval = MICRO_9V;
 		else
 			val->intval = MICRO_12V;
