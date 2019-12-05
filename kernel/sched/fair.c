@@ -5851,7 +5851,7 @@ cpu_is_in_target_set(struct task_struct *p, int cpu)
 {
 	struct root_domain *rd = cpu_rq(cpu)->rd;
 	int first_cpu = (schedtune_task_boost(p)) ?
-		rd->mid_cap_orig_cpu : rd->min_cap_orig_cpu;
+		rd->max_cap_orig_cpu : rd->min_cap_orig_cpu;
 	int next_usable_cpu = cpumask_next(first_cpu - 1, &p->cpus_allowed);
 	return cpu >= next_usable_cpu || next_usable_cpu >= nr_cpu_ids;
 }
@@ -7414,7 +7414,7 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 		if (task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
 			task_boost > 0)
 			return false;
-	} else { /* mid cap cpu */
+	} else { /* min cap cpu */
 		if (task_boost > 1)
 			return false;
 	}
@@ -7468,12 +7468,8 @@ static int start_cpu(struct task_struct *p, bool boosted,
 	struct root_domain *rd = cpu_rq(smp_processor_id())->rd;
 	int start_cpu = -1;
 
-	if (boosted) {
-		if (rd->mid_cap_orig_cpu != -1 &&
-		    task_fits_max(p, rd->mid_cap_orig_cpu))
-			return rd->mid_cap_orig_cpu;
+	if (boosted)
 		return rd->max_cap_orig_cpu;
-	}
 
 	if (sync_boost && rd->max_cap_orig_cpu != -1)
 		return rd->max_cap_orig_cpu;
@@ -7491,9 +7487,6 @@ static int start_cpu(struct task_struct *p, bool boosted,
 	if (rd->min_cap_orig_cpu != -1
 			&& task_fits_max(p, rd->min_cap_orig_cpu))
 		start_cpu = rd->min_cap_orig_cpu;
-	else if (rd->mid_cap_orig_cpu != -1
-				&& task_fits_max(p, rd->mid_cap_orig_cpu))
-		start_cpu = rd->mid_cap_orig_cpu;
 	else
 		start_cpu = rd->max_cap_orig_cpu;
 
@@ -7534,7 +7527,6 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 	int prev_cpu = task_cpu(p);
 	bool next_group_higher_cap = false;
 	int isolated_candidate = -1;
-	int mid_cap_orig_cpu = cpu_rq(smp_processor_id())->rd->mid_cap_orig_cpu;
 	int max_cap_orig_cpu = cpu_rq(6)->rd->max_cap_orig_cpu;
 	struct task_struct *curr_tsk;
 
@@ -7694,9 +7686,9 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 				/*
 				 * Case A.1: IDLE CPU
 				 * Return the best IDLE CPU we find:
-				 * - for boosted tasks: if the task fits in mid
-				 * cluster, prefer the first mid cluster cpu
-				 * due to cpuset design, then other mid cluster
+				 * - for boosted tasks: if the task fits in max
+				 * cluster, prefer the first max cluster cpu
+				 * due to cpuset design, then other max cluster
 				 * cpus. Otherwise, choose max cluster cpu.
 				 * - for !boosted tasks: the most energy
 				 * efficient CPU (i.e. smallest capacity_orig)
@@ -7903,7 +7895,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 			if (boosted) {
 				/*
 				 * For boosted task, stop searching when an idle
-				 * cpu is found in mid cluster.
+				 * cpu is found in max cluster.
 				 */
 				if ((max_cap_orig_cpu != -1 &&
 					best_idle_cpu >= max_cap_orig_cpu) ||
