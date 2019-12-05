@@ -8555,7 +8555,7 @@ pick_cpu:
 			 * If the sync flag is set but ignored, prefer to
 			 * select cpu in the same or nearest cluster as current.
 			 * So if current is a big or big+ cpu and sync is set,
-			 * indicate that the selection algorithm from mid
+			 * indicate that the selection algorithm from max
 			 * capacity cpu should be used.
 			*/
 			bool sync_boost = sync &&
