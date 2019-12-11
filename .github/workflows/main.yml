@@ -1,4 +1,4 @@
-name: CI
+name: Karnul Bleed CI
 
 on: [push]
 
@@ -9,7 +9,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Run a multi-line script
+    - name: Bleed Karnul
       run: |
         apt-get -y update && apt-get -y upgrade && apt-get -y install bc build-essential zip gcc clang libc6 curl libstdc++6 git wget libssl-dev zstd
         export CROSS_COMPILE=${PWD}/aarch64-linux-android-4.9/bin/aarch64-linux-android-
@@ -21,7 +21,7 @@ jobs:
         PATH="clang/bin:aarch64-linux-android-4.9/bin:aarch64-linux-android-4.9/bin:${PATH}"
         mkdir clang
         wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/39e7c63aa6239ae92d63913c82bbe1e9e44b4013/clang-r370808.tar.gz
-        tar -C clang clang-r*.tar.gz
+        tar -C clang xvzf clang-r*.tar.gz
         git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/
         git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/
         make -j12 O=out vendor/violet-perf_defconfig
