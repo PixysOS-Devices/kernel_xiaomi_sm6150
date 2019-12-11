@@ -31,7 +31,6 @@ jobs:
                 CC=${PWD}/clang/bin/clang \
                 CLANG_TRIPLE=aarch64-linux-gnu- Image.gz-dtb 2>&1 | tee error.log
         cp out/arch/arm64/boot/Image.gz-dtb flasher/Image.gz-dtb
-        cp ../dtbos/dtbo-66-ginkgo.img flasher/dtbo.img
         zip -r9 "CrimsonKernel-KarnulCI.zip" flasher/* -x .git README.md
     - uses: actions/upload-artifact@v1.0.0
       name: Artifact-ify Bleed
