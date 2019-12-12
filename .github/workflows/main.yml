@@ -11,6 +11,10 @@ jobs:
     - uses: actions/checkout@v1
     - name: Bleed Karnul
       run: |
+        pwd
+        whoami
+        ls
+        awk -F: '{ print $1 }' /etc/passwd
         export CROSS_COMPILE=${PWD}/aarch64-linux-android-4.9/bin/aarch64-linux-android-
         export KBUILD_BUILD_USER="udit"
         export ARCH=arm64
