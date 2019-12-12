@@ -21,7 +21,8 @@ jobs:
         export CROSS_COMPILE_ARM32=${PWD}/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
         export SUBARCH=arm64
         export DTC_EXT=dtc
-        PATH="clang/bin:aarch64-linux-android-4.9/bin:aarch64-linux-android-4.9/bin:scripts/dtc/bin:${PATH}"
+        chmod a+x /home/runner/work/crimson/crimson/scripts/dtc/bin/dtc
+        PATH="clang/bin:aarch64-linux-android-4.9/bin:aarch64-linux-android-4.9/bin:/home/runner/work/crimson/crimson/scripts/dtc/bin:${PATH}"
         mkdir clang
         wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/39e7c63aa6239ae92d63913c82bbe1e9e44b4013/clang-r370808.tar.gz
         tar -C clang -xvzf clang-r*.tar.gz
