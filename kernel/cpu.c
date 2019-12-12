@@ -592,12 +592,9 @@ static int cpuhp_up_callbacks(unsigned int cpu, struct cpuhp_cpu_state *st,
 static void cpuhp_create(unsigned int cpu)
 {
 	struct cpuhp_cpu_state *st = per_cpu_ptr(&cpuhp_state, cpu);
-	struct cpumask newmask;
 
 	init_completion(&st->done_up);
 	init_completion(&st->done_down);
-
-	cpumask_andnot(&newmask, cpu_online_mask, cpumask_of(cpu));
 }
 
 static int cpuhp_should_run(unsigned int cpu)
@@ -2041,7 +2038,6 @@ static ssize_t write_cpuhp_fail(struct device *dev,
 	if (fail < CPUHP_OFFLINE || fail > CPUHP_ONLINE)
 		return -EINVAL;
 
-	reaffine_perf_irqs();
 	/*
 	 * Cannot fail STARTING/DYING callbacks.
 	 */
@@ -2178,9 +2174,9 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
 		 */
 		cpuhp_offline_cpu_device(cpu);
 	}
-	if (!ret){
+	if (!ret) {
 		cpu_smt_control = ctrlval;
-		reaffine_perf_irqs();
+		arch_smt_update();
 	}
 	cpu_maps_update_done();
 	return ret;

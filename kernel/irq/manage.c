@@ -24,6 +24,7 @@
 
 #include "internals.h"
 
+<<<<<<< HEAD
 struct irq_desc_list {
 	struct list_head list;
 	struct irq_desc *desc;
@@ -34,6 +35,8 @@ struct irq_desc_list {
 static DEFINE_RAW_SPINLOCK(perf_irqs_lock);
 static int perf_cpu_index = -1;
 
+=======
+>>>>>>> parent of 41cc2fd00fca... kernel: Add API to mark IRQs and kthreads as performance critical
 #ifdef CONFIG_IRQ_FORCED_THREADING
 __read_mostly bool force_irqthreads;
 
@@ -1143,6 +1146,7 @@ setup_irq_thread(struct irqaction *new, unsigned int irq, bool secondary)
 	return 0;
 }
 
+<<<<<<< HEAD
 static void add_desc_to_perf_list(struct irq_desc *desc)
 {
 	struct irq_desc_list *item;
@@ -1221,6 +1225,8 @@ void reaffine_perf_irqs(void)
 	raw_spin_unlock_irqrestore(&perf_irqs_lock, flags);
 }
 
+=======
+>>>>>>> parent of 41cc2fd00fca... kernel: Add API to mark IRQs and kthreads as performance critical
 /*
  * Internal function to register an irqaction - typically used to
  * allocate special interrupts that are part of the architecture.
@@ -1297,9 +1303,6 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 			if (ret)
 				goto out_thread;
 		}
-
-		if (new->flags & IRQF_PERF_CRITICAL)
-			affine_one_perf_thread(new->thread);
 	}
 
 	/*
@@ -1480,13 +1483,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 			irq_settings_set_no_balancing(desc);
 			irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
 		}
-		if (new->flags & IRQF_PERF_CRITICAL) {
-			add_desc_to_perf_list(desc);
-			irqd_set(&desc->irq_data, IRQD_AFFINITY_MANAGED);
-			raw_spin_lock(&perf_irqs_lock);
-			affine_one_perf_irq(desc);
-			raw_spin_unlock(&perf_irqs_lock);
-		}		
+
 		if (irq_settings_can_autoenable(desc)) {
 			irq_startup(desc, IRQ_RESEND, IRQ_START_COND);
 		} else {
