@@ -14,7 +14,7 @@ jobs:
         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" -d chat_id="${CHAT_ID}" \
         -d "disable_web_page_preview=true" \
         -d "parse_mode=html" \
-        -d text="CI Build [${GITHUB_ACTION}] Initiated at $(TZ=Asia/Kolkata date +'%Y%m%d')"
+        -d text="CI Build [${GITHUB_ACTION}] Initiated at $(TZ=Asia/Kolkata date)"
     - uses: actions/checkout@v1
     - name: Bleed Karnul
       env:
@@ -47,14 +47,14 @@ jobs:
          -F chat_id="${CHAT_ID}"  \
          -F "disable_web_page_preview=true" \
          -F "parse_mode=html" \
-         -F caption="Build finished at: $(TZ=Asia/Kolkata date +'%Y%m%d') | DTBO-less zip attached" 
+         -F caption="Build finished at: $(TZ=Asia/Kolkata date) | DTBO-less zip attached" 
         else
           cat error.log | grep -i -A3 error > bleed_error.txt
           curl --progress-bar -F document=@"bleed_error.txt" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
          -F chat_id="${CHAT_ID}"  \
          -F "disable_web_page_preview=true" \
          -F "parse_mode=html" \
-         -F caption="Build failed at: $(TZ=Asia/Kolkata date +'%Y%m%d') | Trimmed error log attached" 
+         -F caption="Build failed at: $(TZ=Asia/Kolkata date) | Trimmed error log attached" 
         fi
     - uses: actions/upload-artifact@v1.0.0
       name: Artifact-ify Bleed
