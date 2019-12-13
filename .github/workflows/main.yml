@@ -52,16 +52,14 @@ jobs:
          -F "disable_web_page_preview=true" \
          -F "parse_mode=Markdown" \
          -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) succeeded at: *$(TZ=Asia/Kolkata date)* \`|\` Flashable zip attached"     
-        fi
-    - name: Check Bleed Error
-      if: failure()
-      run: |
-        cat error.log | grep -i -A3 error > bleed_error.txt
+        else
+          cat error.log | grep -i -A3 error > bleed_error.txt
           curl --progress-bar -F document=@"bleed_error.txt" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
-         -F chat_id="${CHAT_ID}"  \
-         -F "disable_web_page_preview=true" \
-         -F "parse_mode=Markdown" \
-         -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) failed at: *$(TZ=Asia/Kolkata date)* \`|\` Trimmed error log attached"
+          -F chat_id="${CHAT_ID}"  \
+          -F "disable_web_page_preview=true" \
+          -F "parse_mode=Markdown" \
+          -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) failed at: *$(TZ=Asia/Kolkata date)* \`|\` Trimmed error log attached"  
+        fi
     - uses: actions/upload-artifact@v1.0.0
       name: Artifact-ify Bleed
       with:
