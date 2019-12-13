@@ -50,7 +50,7 @@ jobs:
          -F chat_id="${CHAT_ID}"  \
          -F "disable_web_page_preview=true" \
          -F "parse_mode=html" \
-         -F caption="Build for ${GITHUB_REF}/${GITHUB_SHA} succeeded at: **$(TZ=Asia/Kolkata date)** | DTBO-less zip attached" 
+         -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) succeeded at: *$(TZ=Asia/Kolkata date)* | DTBO-less zip attached" 
         else
           cat error.log | grep -i -A3 error > bleed_error.txt
           curl --progress-bar -F document=@"bleed_error.txt" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
