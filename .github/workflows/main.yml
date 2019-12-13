@@ -14,7 +14,7 @@ jobs:
         curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" -d chat_id="${CHAT_ID}" \
         -d "disable_web_page_preview=true" \
         -d "parse_mode=Markdown" \
-        -d text="CI Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) initiated at *$(TZ=Asia/Kolkata date)*"
+        -d text="\`CI\` Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) initiated at *$(TZ=Asia/Kolkata date)*"
     - uses: actions/checkout@v1
     - name: Bleed Karnul
       env:
@@ -43,6 +43,7 @@ jobs:
         if [ -f out/arch/arm64/boot/Image.gz-dtb ]; then
           cp out/arch/arm64/boot/Image.gz-dtb flasher/Image.gz-dtb
           cd flasher
+          wget https://uditviolet.web.app/dtbo-66-ginkgo.img -O dtbo.img
           zip -r9 "CrimsonKernel-KarnulCI.zip" * -x .git README.md LICENSE
           cp CrimsonKernel-KarnulCI.zip ..
           cd ..
@@ -50,15 +51,17 @@ jobs:
          -F chat_id="${CHAT_ID}"  \
          -F "disable_web_page_preview=true" \
          -F "parse_mode=html" \
-         -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) succeeded at: *$(TZ=Asia/Kolkata date)* | DTBO-less zip attached" 
-        else
-          cat error.log | grep -i -A3 error > bleed_error.txt
+         -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) succeeded at: *$(TZ=Asia/Kolkata date)* \`|\` Flashable zip attached"     
+        fi
+    - name: Check Bleed Error
+      if: failure()
+      run: |
+        cat error.log | grep -i -A3 error > bleed_error.txt
           curl --progress-bar -F document=@"bleed_error.txt" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
          -F chat_id="${CHAT_ID}"  \
          -F "disable_web_page_preview=true" \
          -F "parse_mode=Markdown" \
-         -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) failed at: *$(TZ=Asia/Kolkata date)* | Trimmed error log attached" 
-        fi
+         -F caption="Build for [${GITHUB_SHA}](https://github.com/uditkarode/crimson/commit/${GITHUB_SHA}) failed at: *$(TZ=Asia/Kolkata date)* \`|\` Trimmed error log attached"
     - uses: actions/upload-artifact@v1.0.0
       name: Artifact-ify Bleed
       with:
