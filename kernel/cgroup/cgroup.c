@@ -4460,7 +4460,7 @@ static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
 	ret = cgroup_attach_task(dst_cgrp, task, true);
 	if (!ret &&
 	    !strcmp(of->kn->parent->name, "top-app") &&
-	    is_zygote_pid(tsk->parent->pid)) {
+	    is_zygote_pid(task->parent->pid)) {
 		cpu_input_boost_kick_max(500);
 		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 500);
 	}
