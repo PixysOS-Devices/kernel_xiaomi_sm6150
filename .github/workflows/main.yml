@@ -42,7 +42,8 @@ jobs:
                 CLANG_TRIPLE=aarch64-linux-gnu- Image.gz-dtb 2>&1 | tee error.log
         if [ -f out/arch/arm64/boot/Image.gz-dtb ]; then
           cp out/arch/arm64/boot/Image.gz-dtb flasher/Image.gz-dtb
-          zip -r9 "CrimsonKernel-KarnulCI.zip" flasher/* -x .git README.md
+          cd flasher
+          zip -r9 "CrimsonKernel-KarnulCI.zip" * -x .git README.md LICENSE
           curl --progress-bar -F document=@"CrimsonKernel-KarnulCI.zip" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
          -F chat_id="${CHAT_ID}"  \
          -F "disable_web_page_preview=true" \
