@@ -142,6 +142,20 @@ struct boost_groups {
 /* Boost groups affecting each CPU in the system */
 DEFINE_PER_CPU(struct boost_groups, cpu_boost_groups);
 
+static inline bool schedtune_boost_timeout(u64 now, u64 ts)
+{
+	return ((now - ts) > SCHEDTUNE_BOOST_HOLD_NS);
+}
+
+static inline bool
+schedtune_boost_group_active(int idx, struct boost_groups* bg, u64 now)
+{
+	if (bg->group[idx].tasks)
+		return true;
+
+	return !schedtune_boost_timeout(now, bg->group[idx].ts);
+}
+
 static inline void init_sched_boost(struct schedtune *st)
 {
 	st->sched_boost_no_override = false;
