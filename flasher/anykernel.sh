@@ -32,7 +32,7 @@ is_slot_device=0;
 magisk_check;
 
 ## AnyKernel install
-if [ "$magisk_present" = true && ! -z "$($ZIPFILE | grep -i noroot)" ]; then
+if [ "$magisk_present" = true && -z "$($ZIPFILE | grep -i noroot)" ]; then
   # AnyKernel file attributes
   # set permissions/ownership for included ramdisk files
   dump_boot;
