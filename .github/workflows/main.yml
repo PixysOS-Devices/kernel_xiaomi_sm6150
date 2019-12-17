@@ -47,7 +47,9 @@ jobs:
           zip -r9 "CrimsonKernel-KarnulCI.zip" * -x .git README.md LICENSE
           cp CrimsonKernel-KarnulCI.zip ..
           cd ..
-          curl --progress-bar -F document=@"CrimsonKernel-KarnulCI.zip" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
+          tod="$(TZ=Asia/Kolkata date +'%Y%m%d-%H%M')"
+          cp flasher/CrimsonKernel-KarnulCI.zip "CrimsonKranul-CI-$tod.zip"
+          curl --progress-bar -F document=@"CrimsonKranul-CI-$tod.zip" "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
          -F chat_id="${CHAT_ID}"  \
          -F "disable_web_page_preview=true" \
          -F "parse_mode=Markdown" \
