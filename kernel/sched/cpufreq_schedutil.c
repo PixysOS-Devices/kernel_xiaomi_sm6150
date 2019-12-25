@@ -14,6 +14,7 @@
 #include <linux/slab.h>
 #include <linux/sched/cpufreq.h>
 #include <trace/events/power.h>
+#include <linux/cpuset.h>
 
 #include "sched.h"
 
@@ -224,7 +225,7 @@ unsigned long schedutil_freq_util(int cpu, unsigned long util_cfs,
 	 * to obtain the CPU's actual utilization.
 	 */
 	util = util_cfs;
-	util += cpu_util_rt(rq);
+	util += cpu_util_rt(cpu);
 
 	dl_util = cpu_util_dl(rq);
 

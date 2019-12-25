@@ -725,19 +725,13 @@ struct max_cpu_capacity {
 };
 
 struct perf_domain {
-	struct em_perf_domain *obj;
+	struct em_perf_domain *em_pd;
 	struct perf_domain *next;
 	struct rcu_head rcu;
 };
 
 /* Scheduling group status flags */
 #define SG_OVERLOAD		0x1 /* More than one runnable task on a CPU. */
-
-struct perf_domain {
-	struct em_perf_domain *em_pd;
-	struct perf_domain *next;
-	struct rcu_head rcu;
-};
 
 /*
  * We add the notion of a root-domain which will be used to define per-domain
@@ -3186,7 +3180,7 @@ extern void sched_get_nr_running_avg(struct sched_avg_stats *stats);
 
 #ifdef CONFIG_SMP
 #ifdef CONFIG_ENERGY_MODEL
-#define perf_domain_span(pd) (to_cpumask(((pd)->obj->cpus)))
+#define perf_domain_span(pd) (to_cpumask(((pd)->em_pd->cpus)))
 #else
 #define perf_domain_span(pd) NULL
 #endif
@@ -3233,10 +3227,6 @@ static inline unsigned long cpu_util_cfs(struct rq *rq)
 	return rq->cfs.avg.util_avg;
 }
 
-static inline unsigned long cpu_util_rt(struct rq *rq)
-{
-	return READ_ONCE(rq->avg_rt.util_avg);
-}
 #else /* CONFIG_CPU_FREQ_GOV_SCHEDUTIL */
 static inline unsigned long schedutil_energy_util(int cpu, unsigned long cfs)
 {

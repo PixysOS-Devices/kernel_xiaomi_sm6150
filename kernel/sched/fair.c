@@ -8549,7 +8549,7 @@ static long compute_energy_simplified(struct task_struct *p, int dst_cpu,
 			sum_util += util;
 		}
 
-		energy += em_pd_energy(pd->obj, max_util, sum_util);
+		energy += em_pd_energy(pd->em_pd, max_util, sum_util);
 		pd = pd->next;
 	}
 
