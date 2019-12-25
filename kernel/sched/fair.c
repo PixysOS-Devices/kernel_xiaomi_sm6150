@@ -7904,7 +7904,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 		if (!prefer_idle && !boosted &&
 			(target_cpu != -1 || best_idle_cpu != -1) &&
 			(fbt_env->placement_boost == SCHED_BOOST_NONE ||
-			sched_boost() != FULL_THROTTLE_BOOST ||
+			sched_boost() != 1 ||
 			(fbt_env->placement_boost == SCHED_BOOST_ON_BIG &&
 				!next_group_higher_cap)))
 			break;
@@ -9588,9 +9588,6 @@ redo:
 
 		continue;
 next:
-		trace_sched_load_balance_skip_tasks(env->src_cpu, env->dst_cpu,
-				env->src_grp_type, p->pid, load, task_util(p),
-				cpumask_bits(&p->cpus_allowed)[0]);
 		list_move(&p->se.group_node, tasks);
 	}
 

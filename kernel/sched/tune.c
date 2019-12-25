@@ -225,20 +225,6 @@ static int sched_boost_override_write(struct cgroup_subsys_state *css,
 
 #endif /* CONFIG_SCHED_WALT */
 
-static inline bool schedtune_boost_timeout(u64 now, u64 ts)
-{
-	return ((now - ts) > SCHEDTUNE_BOOST_HOLD_NS);
-}
-
-static inline bool
-schedtune_boost_group_active(int idx, struct boost_groups* bg, u64 now)
-{
-	if (bg->group[idx].tasks)
-		return true;
-
-	return !schedtune_boost_timeout(now, bg->group[idx].ts);
-}
-
 static void
 schedtune_cpu_update(int cpu, u64 now)
 {

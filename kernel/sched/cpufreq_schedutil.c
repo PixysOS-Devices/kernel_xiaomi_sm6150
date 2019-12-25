@@ -109,11 +109,6 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 	    !cpufreq_can_do_remote_dvfs(sg_policy->policy))
 		return false;
 
-	if (unlikely(sg_policy->limits_changed)) {
-		sg_policy->limits_changed = false;
-		sg_policy->need_freq_update = true;
-		return true;
-	}
 	/* No need to recalculate next freq for min_rate_limit_us
 	 * at least. However we might still decide to further rate
 	 * limit once frequency change direction is decided, according
@@ -820,11 +815,6 @@ static int sugov_init(struct cpufreq_policy *policy)
 		ret = -ENOMEM;
 		goto stop_kthread;
 	}
-
-	tunables->up_rate_limit_us =
-				CONFIG_SCHEDUTIL_UP_RATE_LIMIT;
-	tunables->down_rate_limit_us =
-				CONFIG_SCHEDUTIL_DOWN_RATE_LIMIT;
 
 	tunables->iowait_boost_enable = true;
 
